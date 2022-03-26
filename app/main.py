@@ -10,21 +10,17 @@ from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
-from . import models
+from . import models, schema
 from .database import engine, get_db
+
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 while True:
-
     try:
         conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres', 
         password='123456', cursor_factory=RealDictCursor)
@@ -37,9 +33,6 @@ while True:
         sleep(2)
 
 
-
-my_posts = [{"title": "title of post 1", "content" : "content of post 1", "id": 1},
-{"title": "food", "content" : "pizza", "id": 2} ]
 
 def find_post(id):
     for p in my_posts:
@@ -59,17 +52,17 @@ def root():
 @app.get("/posts")
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post, db: Session = Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model= schema.Post)
+def create_posts(post: schema.PostCreate, db: Session = Depends(get_db)):
     
     new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
 
-    return {"data": new_post}
+    return new_post
 
 @app.get('/posts/{id}')
 def get_post(id: int, response: Response, db: Session = Depends(get_db)):
@@ -78,11 +71,11 @@ def get_post(id: int, response: Response, db: Session = Depends(get_db)):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
         detail= f"post with id: {id} was not found")
-    return {"post_detail": post }
+    return post
 
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id:int,db: Session = Depends(get_db)):
+def delete_post(id:int, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 
@@ -95,7 +88,7 @@ def delete_post(id:int,db: Session = Depends(get_db)):
     return {"message" : "post was succesfully deleted"}
     
 @app.put('/posts/{id}')
-def update_post(id:int, post: Post, db: Session = Depends(get_db)):
+def update_post(id:int, post: schema.PostCreate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     updated_post = post_query.first()
 
@@ -105,4 +98,4 @@ def update_post(id:int, post: Post, db: Session = Depends(get_db)):
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
     db.refresh(updated_post)
-    return {"data" : updated_post}
+    return updated_post
