@@ -3,7 +3,7 @@ from importlib.resources import contents
 from logging import exception
 from pyexpat import model
 from time import sleep
-from typing import Optional
+from typing import Optional, List
 from fastapi import Body, FastAPI, Response, responses, status, HTTPException, Depends
 from pydantic import BaseModel
 from random import randrange
@@ -49,7 +49,7 @@ def root():
     return {"message": "Welcome to my pepega"}
 
 
-@app.get("/posts")
+@app.get("/posts", response_model= List[schema.Post])
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
@@ -64,7 +64,7 @@ def create_posts(post: schema.PostCreate, db: Session = Depends(get_db)):
 
     return new_post
 
-@app.get('/posts/{id}')
+@app.get('/posts/{id}', response_model= schema.Post)
 def get_post(id: int, response: Response, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
@@ -87,7 +87,7 @@ def delete_post(id:int, db: Session = Depends(get_db)):
 
     return {"message" : "post was succesfully deleted"}
     
-@app.put('/posts/{id}')
+@app.put('/posts/{id}', response_model= schema.Post)
 def update_post(id:int, post: schema.PostCreate, db: Session = Depends(get_db)):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     updated_post = post_query.first()
