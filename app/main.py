@@ -10,7 +10,7 @@ from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
-from . import models, schema
+from . import models, schema, utils
 from .database import engine, get_db
 
 
@@ -93,6 +93,10 @@ def update_post(id:int, post: schema.PostCreate, db: Session = Depends(get_db)):
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schema.UserOut)
 def create_user(user:schema.UserCreate, db: Session = Depends(get_db)):
+
+    #hash password
+    hashed_pwd = utils.hash(user.password)
+    user.password = hashed_pwd
 
     new_user = models.User(**user.dict())
     db.add(new_user)
