@@ -34,15 +34,6 @@ while True:
 
 
 
-def find_post(id):
-    for p in my_posts:
-        if p["id"] == id:
-            return p
-
-def find_index_post(id):
-    for i, p in enumerate(my_posts):
-        if p['id'] == id:
-            return i
 
 @app.get("/")   
 def root():
@@ -99,3 +90,13 @@ def update_post(id:int, post: schema.PostCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(updated_post)
     return updated_post
+
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schema.UserOut)
+def create_user(user:schema.UserCreate, db: Session = Depends(get_db)):
+
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
