@@ -1,4 +1,3 @@
-from unittest import result
 from app.routers.user import get_user
 from .. import models, schemas, oauth2
 from fastapi import Body, FastAPI, Response, responses, status, HTTPException, Depends, APIRouter
