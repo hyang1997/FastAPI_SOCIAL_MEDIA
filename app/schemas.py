@@ -3,7 +3,7 @@ from ast import Str
 from lib2to3.pytree import Base
 from turtle import back
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, conint
 from datetime import datetime
 
 class PostBase(BaseModel):
@@ -45,3 +45,6 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: Optional[str] = None
 
+class Vote(BaseModel):
+    post_id: int
+    dir: conint(ge=0, le=1)
